@@ -63,7 +63,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       # --- MAIN MULTI-ARCH BUILD + PUSH ---
-      - name: Build & Push Image (Multi-Arch, Cached)
+      - name: Build & Push Image (Multi-Arch
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -73,8 +73,6 @@ jobs:
           tags: |
             ${{ steps.vars.outputs.image }}:latest
             ${{ steps.vars.outputs.image }}:${{ steps.vars.outputs.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   cleanup:
     name: Cleanup Old Images
