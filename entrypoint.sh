@@ -54,8 +54,6 @@ echo -e "${Y}-----------------------------------------${R}"
 # --- Print Runtime Versions ---
 echo -e "${G}Node.js:${R} $(node -v 2>/dev/null || echo 'Not installed')"
 echo -e "${G}npm:    ${R} $(npm -v 2>/dev/null || echo 'Not installed')"
-echo -e "${G}yarn:   ${R} $(yarn -v 2>/dev/null || echo 'Not installed')"
-echo -e "${G}pnpm:   ${R} $(pnpm -v 2>/dev/null || echo 'Not installed')"
 echo -e "${G}bun:    ${R} $(bun -v 2>/dev/null || echo 'Not installed')"
 
 echo -e "${Y}-----------------------------------------${R}"
