@@ -65,7 +65,7 @@ echo -e "${G}bun:    ${R} $(bun -v 2>/dev/null || echo 'Not installed')"
 echo -e "${Y}-----------------------------------------${R}"
 
 # --- Safe STARTUP Parser ---
-PARSED=$(echo "${STARTUP}" | sed -e 's/{{\([^}]*\)}}/\${\1}/g')
+PARSED=$(echo "${STARTUP}" | sed -e 's/{{/${/g' -e 's/}}/}/g' | eval echo "$(cat -)")
 
 echo -e "${Y}Executing:${R} ${PARSED}"
 
