@@ -6,7 +6,7 @@ LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.description="Pterodactyl Node.js multi-runtime image with Bun, NVM (Node 18/20/22/24), Yarn, PNPM, and optimized Debian bookworm-slim base."
 
 # --- Install dependencies ---
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl wget git bash ca-certificates \
     build-essential zip unzip tar ffmpeg jq procps \
     iproute2 \
