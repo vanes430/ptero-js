@@ -20,12 +20,12 @@ RUN curl -fsSL https://bun.sh/install | bash && \
 ENV BUN_INSTALL="/opt/bun"
 ENV PATH="/opt/bun/bin:${PATH}"
 
-# --- Install NVM in safe location ---
+# --- Install NVM ---
 ENV NVM_DIR="/opt/nvm"
 RUN mkdir -p /opt/nvm && \
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 
-# --- Install multiple Node.js versions ---
+# --- Install Node versions ---
 RUN bash -c "export NVM_DIR=/opt/nvm && \
     source /opt/nvm/nvm.sh && \
     nvm install 18 && \
@@ -34,15 +34,7 @@ RUN bash -c "export NVM_DIR=/opt/nvm && \
     nvm install 24 && \
     nvm alias default 20"
 
-# --- Fix: Ensure NVM loads for non-root users (critical patch) ---
-RUN echo 'export NVM_DIR="/opt/nvm"' >> /etc/profile.d/nvm.sh && \
-    echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> /etc/profile.d/nvm.sh && \
-    chmod +x /etc/profile.d/nvm.sh
-
-# --- Ensure default Node version is available in PATH ---
-ENV PATH="/opt/nvm/versions/node/v20.0.0/bin:${PATH}"
-
-# --- Install Yarn & PNPM globally ---
+# --- Install Yarn & PNPM with default Node ---
 RUN bash -c "export NVM_DIR=/opt/nvm && \
     source /opt/nvm/nvm.sh && \
     nvm use default && \
@@ -51,11 +43,17 @@ RUN bash -c "export NVM_DIR=/opt/nvm && \
 # --- Add Pterodactyl user ---
 RUN useradd -m -d /home/container container
 
+# --- Enable NVM for user container only ---
+RUN echo 'export NVM_DIR="/opt/nvm"' >> /home/container/.bashrc && \
+    echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> /home/container/.bashrc && \
+    echo '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"' >> /home/container/.bashrc && \
+    chown container:container /home/container/.bashrc
+
 USER container
 ENV USER=container HOME=/home/container
 WORKDIR /home/container
 
 # --- Copy entrypoint ---
-COPY --chmod=755 ./../entrypoint.sh /entrypoint.sh
+COPY --chmod=755 ./entrypoint.sh /entrypoint.sh
 
 CMD [ "/bin/bash", "/entrypoint.sh" ]
