@@ -1,0 +1,128 @@
+name: Build & Deploy Docker (Fast Parallel Multi-Arch)
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "Dockerfile"
+      - "entrypoint.sh"
+      - ".github/workflows/docker.yml"
+  workflow_dispatch: {}
+
+env:
+  IMAGE_NAME: ptero-js
+
+jobs:
+
+  # ========================================================
+  # Build AMD64
+  # ========================================================
+  build-amd64:
+    name: Build amd64
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build & Push (amd64 only)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+
+  # ========================================================
+  # Build ARM64
+  # ========================================================
+  build-arm64:
+    name: Build arm64
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build & Push (arm64 only)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+
+
+  # ========================================================
+  # MERGE MANIFEST: multi-arch final image
+  # ========================================================
+  manifest:
+    name: Publish Multi-Arch Manifest
+    runs-on: ubuntu-latest
+    needs: [build-amd64, build-arm64]
+
+    steps:
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Create & Push Manifest
+        run: |
+          IMAGE="ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}"
+
+          docker buildx imagetools create \
+            -t $IMAGE:latest \
+            -t $IMAGE:${{ github.sha }} \
+            $IMAGE:amd64 \
+            $IMAGE:arm64
+
+
+  # ========================================================
+  # Cleanup old images
+  # ========================================================
+  cleanup:
+    name: Cleanup Old Images
+    needs: manifest
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Keep last 10 versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ env.IMAGE_NAME }}
+          package-type: container
+          min-versions-to-keep: 10
