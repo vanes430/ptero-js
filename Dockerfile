@@ -25,7 +25,7 @@ ENV NVM_DIR="/opt/nvm"
 RUN mkdir -p /opt/nvm && \
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 
-# --- Install Node versions ---
+# --- Install multiple Node.js versions ---
 RUN bash -c "export NVM_DIR=/opt/nvm && \
     source /opt/nvm/nvm.sh && \
     nvm install 18 && \
@@ -40,11 +40,14 @@ RUN bash -c "export NVM_DIR=/opt/nvm && \
     nvm use default && \
     npm install -g yarn pnpm"
 
-# --- Add Pterodactyl user ---
+# --- Create Pterodactyl user ---
 RUN useradd -m -d /home/container container
 
-# --- Enable NVM for user container only ---
-RUN echo 'export NVM_DIR="/opt/nvm"' >> /home/container/.bashrc && \
+# --- FIX: Ensure yarn & pnpm work for user container ---
+RUN for v in /opt/nvm/versions/node/*; do \
+        echo "export PATH=\"$v/bin:\$PATH\"" >> /home/container/.bashrc; \
+    done && \
+    echo 'export NVM_DIR="/opt/nvm"' >> /home/container/.bashrc && \
     echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> /home/container/.bashrc && \
     echo '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"' >> /home/container/.bashrc && \
     chown container:container /home/container/.bashrc
@@ -54,6 +57,6 @@ ENV USER=container HOME=/home/container
 WORKDIR /home/container
 
 # --- Copy entrypoint ---
-COPY --chmod=755 ./entrypoint.sh /entrypoint.sh
+COPY --chmod=755 ./../entrypoint.sh /entrypoint.sh
 
 CMD [ "/bin/bash", "/entrypoint.sh" ]
