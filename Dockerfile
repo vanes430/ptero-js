@@ -3,7 +3,7 @@ FROM --platform=$TARGETOS/$TARGETARCH debian:bookworm-slim
 LABEL author="Vanes" maintainer="vanessimbolon2020@gmail.com"
 LABEL org.opencontainers.image.source="https://github.com/vanes430/ptero-js"
 LABEL org.opencontainers.image.licenses="MIT"
-LABEL org.opencontainers.image.description="Pterodactyl Node.js multi-runtime image with Bun, NVM (Node 18/20/22/24), Yarn, PNPM, and optimized Debian bookworm-slim base."
+LABEL org.opencontainers.image.description="Pterodactyl Node.js multi-runtime image with Bun, NVM (Node 18/20/22/24), and optimized Debian bookworm-slim base."
 
 # --- Install dependencies ---
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -34,20 +34,11 @@ RUN bash -c "export NVM_DIR=/opt/nvm && \
     nvm install 24 && \
     nvm alias default 20"
 
-# --- Install Yarn & PNPM with default Node ---
-RUN bash -c "export NVM_DIR=/opt/nvm && \
-    source /opt/nvm/nvm.sh && \
-    nvm use default && \
-    npm install -g yarn pnpm"
-
 # --- Create Pterodactyl user ---
 RUN useradd -m -d /home/container container
 
-# --- FIX: Ensure yarn & pnpm work for user container ---
-RUN for v in /opt/nvm/versions/node/*; do \
-        echo "export PATH=\"$v/bin:\$PATH\"" >> /home/container/.bashrc; \
-    done && \
-    echo 'export NVM_DIR="/opt/nvm"' >> /home/container/.bashrc && \
+# --- Enable NVM for user container (Node 18/20/22/24 available) ---
+RUN echo 'export NVM_DIR="/opt/nvm"' >> /home/container/.bashrc && \
     echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> /home/container/.bashrc && \
     echo '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"' >> /home/container/.bashrc && \
     chown container:container /home/container/.bashrc
