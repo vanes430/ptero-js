@@ -20,14 +20,10 @@ export NVM_DIR="/opt/nvm"
 
 # --- Select Node version based on ENV ---
 if [[ -n "${NODEJS_VERSION}" ]]; then
-    echo -e "\033[33mSelecting Node.js version from NODEJS_VERSION=${NODEJS_VERSION}\033[0m"
-
     # Validate version exists
     if nvm ls | grep -q "v${NODEJS_VERSION}"; then
         nvm use "${NODEJS_VERSION}" >/dev/null 2>&1 || true
     else
-        echo -e "\033[31mRequested Node.js version '${NODEJS_VERSION}' is not installed!\033[0m"
-        echo -e "\033[33mFalling back to default Node version...\033[0m"
         nvm use default >/dev/null 2>&1 || true
     fi
 else
@@ -46,7 +42,7 @@ R="\033[0m"
 
 # --- Banner ---
 echo -e "${Y}=========================================${R}"
-echo -e "${G}   🚀 Pterodactyl Node Multi-Runtime     ${R}"
+echo -e "${G}   🚀  Pterodactyl Node Multi-Runtime    ${R}"
 echo -e "${Y}=========================================${R}"
 echo -e "${C}Internal IP: ${INTERNAL_IP}${R}"
 echo -e "${C}Timezone:    ${TZ}${R}"
