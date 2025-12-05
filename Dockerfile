@@ -34,6 +34,12 @@ RUN bash -c "export NVM_DIR=/opt/nvm && \
     nvm install 24 && \
     nvm alias default 20"
 
+# --- Fix: Ensure NVM loads for non-root users (critical patch) ---
+RUN echo 'export NVM_DIR="/opt/nvm"' >> /etc/profile.d/nvm.sh && \
+    echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> /etc/profile.d/nvm.sh && \
+    chmod +x /etc/profile.d/nvm.sh
+
+# --- Ensure default Node version is available in PATH ---
 ENV PATH="/opt/nvm/versions/node/v20.0.0/bin:${PATH}"
 
 # --- Install Yarn & PNPM globally ---
